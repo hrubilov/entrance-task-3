@@ -17,13 +17,19 @@
 if (needStoreForOffline(cacheKey)) { 
     response = caches.match(cacheKey)     
       .then(cacheResponse => cacheResponse || fetchAndPutToCache(cacheKey, event.request));        
-    } else {
-        response = fetchWithFallbackToCache(event.request);
+} else {
+    response = fetchWithFallbackToCache(event.request);
 }
 ```
 Из этих строк становится ясно, что если местоположение ресурса указывает на то, что его нужно сохранить в кэше, то ресурс ищется в кэше, при помощи функции `caches.match(cacheKey)`. В случае успешного нахождения файла, промис, возвращаемый функцией `caches.match()` резолвится в респонс c файлом из кэша или, если `cacheResponse` равен `undefined` (ресурс не найден), вызывать функцию скачивания ресурса `fetchAndPutToCache(cacheKey, event.request)`. Именно поэтому, закэшировавшись один раз, файлы постоянно берутся из кэша. Решить проблему можно заменив вышеприведенный код на:
 
-`response = fetchAndPutToCache(cacheKey, event.request); `
+```
+if (needStoreForOffline(cacheKey)) { 
+    response = fetchAndPutToCache(cacheKey, event.request);         
+} else {
+    response = fetchWithFallbackToCache(event.request);
+}
+```
 
 При этом функция `fetchAndPutToCache()` уже содержит в себе обработчик `.catch`, который в случае неудачной попытки скачивания ресурса вернет соответствующий промис от функции `caches.match()`. 
 
